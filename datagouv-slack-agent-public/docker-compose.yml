@@ -1,0 +1,7 @@
+services:
+  agent:
+    build: .
+    env_file: .env
+    volumes:
+      - ./cache:/app/cache
+    restart: unless-stopped
