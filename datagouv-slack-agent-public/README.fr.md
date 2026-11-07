@@ -33,7 +33,7 @@ Projet fonctionnel en production :
 - 🔔 Alertes data.gouv.fr automatiques (scheduler toutes les heures)
 - 📎 Analyse de fichiers uploadés (CSV/Excel/JSON/Parquet/ZIP)
 - 🗄️ Analyse SQL locale (DuckDB) avec filtres via `sql_query`
-- 34 tests pytest passent en ~2 secondes
+- 41 tests pytest passent en ~2 secondes
 
 ---
 
@@ -267,7 +267,7 @@ Slack (Socket Mode)
 pytest
 ```
 
-34 tests, ~2 secondes. Mocks réseau via `respx`.
+41 tests, ~2 secondes. Mocks réseau via `respx`.
 
 ---
 

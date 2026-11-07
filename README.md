@@ -4,9 +4,8 @@ Conversational AI agent for Slack that answers natural-language questions about 
 
 > 🇫🇷 Version française : [README.fr.md](README.fr.md)
 
-<!-- [GIF DE DÉMO ICI : 20 sec d'une conversation Slack, enregistrée avec Kap ou LICEcap] -->
 
-![Tests](https://img.shields.io/badge/tests-37%20passing-brightgreen) ![Python](https://img.shields.io/badge/python-3.11%2B-blue) ![Ruff](https://img.shields.io/badge/linting-ruff-orange)
+![Tests](https://img.shields.io/badge/tests-41%20passing-brightgreen) ![Python](https://img.shields.io/badge/python-3.11%2B-blue) ![Ruff](https://img.shields.io/badge/linting-ruff-orange)
 
 ## What it does
 
@@ -34,19 +33,19 @@ Key design choices (full rationale in [ARCHITECTURE.md](ARCHITECTURE.md)):
 ## Quickstart
 
 ```bash
-git clone <repo> && cd datagouv-slack-agent
+git clone https://github.com/ilanm7/BOT_DATAGOUV && cd BOT_DATAGOUV/datagouv-slack-agent-public
 uv venv && source .venv/bin/activate
 uv pip install -e ".[dev]"
 cp .env.example .env   # fill in your Slack + LLM keys
 python launch_bot.py
 ```
 
-Full Slack app setup (manifest included): see [SETUP.md](SETUP.md). Docker: `docker compose up`.
+Slack app manifest: [`slack_manifest.json`](datagouv-slack-agent-public/slack_manifest.json). Step-by-step setup (French): [`README.fr.md`](datagouv-slack-agent-public/README.fr.md). A Dockerfile is included but has not been validated yet.
 
 ## Tests
 
 ```bash
-pytest   # 37 tests, ~2s
+pytest   # 41 tests, ~2s
 ```
 
 Covers config validation, download pipeline, local analyzer, LLM client and bot logic (mocked with respx).
@@ -57,7 +56,7 @@ Honest status — this is a working system with open issues:
 
 - Real-estate (DVF) and AI tender queries sometimes fail at the retrieval step: the MCP search ranks the wrong datasets first. Fix in progress: query rewriting + curated dataset shortlist.
 - Test coverage is concentrated on the data layer; the orchestrator loop needs dedicated tests.
-- `app/slack/bot.py` has grown to ~2,400 lines and is being split into handlers.
+- `app/slack/bot.py` has grown to ~2,500 lines and is being split into handlers.
 
 ## Context
 
