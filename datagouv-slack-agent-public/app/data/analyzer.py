@@ -392,8 +392,17 @@ def _jsonable(val: Any) -> Any:
     return str(val)
 
 
+def _lock_connection(con: duckdb.DuckDBPyConnection, *paths: Path) -> None:
+    """Limite la connexion à ces fichiers. Irréversible : le SQL du LLM ne peut plus rien ouvrir d'autre."""
+    allowed = ", ".join(f"'{_duckdb_escape_path(p)}'" for p in paths)
+    con.execute(f"SET allowed_paths = [{allowed}]")
+    con.execute("SET enable_external_access = false")
+    con.execute("SET lock_configuration = true")
+
+
 def query_file(path: Path, sql_query: str, max_scan_rows: int = 100_000, max_file_size_mb: int = 1_500) -> list[dict[str, Any]]:
     """Exécute une requête SQL SELECT sur un fichier local via DuckDB."""
+    path = path.resolve()
     file_size_mb = path.stat().st_size / (1024 * 1024)
     if file_size_mb > max_file_size_mb:
         raise AnalysisError(
@@ -403,7 +412,7 @@ def query_file(path: Path, sql_query: str, max_scan_rows: int = 100_000, max_fil
     sql_upper = sql_query.strip().upper()
     if not any(sql_upper.startswith(k) for k in ("SELECT", "WITH")):
         raise AnalysisError("Seules les requêtes SELECT ou WITH sont autorisées.")
-    # Sandbox : interdire les fonctions et commandes pouvant accéder au système de fichiers
+    # Premier filtre seulement : le vrai verrou d'accès aux fichiers est _lock_connection
     forbidden = (
         "READ_CSV", "READ_PARQUET", "READ_JSON", "READ_JSON_AUTO", "READ_CSV_AUTO",
         "COPY", "EXPORT", "ATTACH", "CREATE ", "INSERT ", "DELETE ", "DROP ",
@@ -473,6 +482,7 @@ def query_file(path: Path, sql_query: str, max_scan_rows: int = 100_000, max_fil
                         f"DuckDB n'a pas pu lire {main_path.name} avec aucun des {len(readers_to_try)} dialectes testés. "
                         f"Dernière erreur: {last_err}"
                     ) from last_err
+                _lock_connection(con, *filter(None, (main_path, tmp_csv)))
                 sql_trimmed = sql_query.strip()
                 if "LIMIT" not in sql_trimmed.upper():
                     sql_trimmed = f"{sql_trimmed} LIMIT {max_scan_rows}"
@@ -528,17 +538,16 @@ def query_file(path: Path, sql_query: str, max_scan_rows: int = 100_000, max_fil
         else:
             # Fallback pandas pour les CSV mal encodés
             if ext in {".csv", ".tsv", ".txt", ".bin", ".gz"} or str(path).lower().endswith(".csv.gz"):
-                tmp = _pandas_csv_fallback(path)
-                try:
-                    con.execute(f"CREATE VIEW src AS SELECT * FROM read_csv_auto('{tmp}', sample_size=20000, ignore_errors=true)")
-                    con.execute("CREATE VIEW scan AS SELECT * FROM src")
-                finally:
-                    tmp.unlink(missing_ok=True)
+                # La vue relit le fichier à chaque requête : tmp_csv est supprimé dans le finally
+                tmp_csv = _pandas_csv_fallback(path)
+                con.execute(f"CREATE VIEW src AS SELECT * FROM read_csv_auto('{_duckdb_escape_path(tmp_csv)}', sample_size=20000, ignore_errors=true)")
+                con.execute("CREATE VIEW scan AS SELECT * FROM src")
             else:
                 raise AnalysisError(
                     f"DuckDB n'a pas pu lire {path.name} avec aucun des {len(readers_to_try)} dialectes testés. "
                     f"Dernière erreur: {last_err}"
                 ) from last_err
+        _lock_connection(con, *filter(None, (path, tmp_csv)))
         sql_trimmed = sql_query.strip()
         if "LIMIT" not in sql_trimmed.upper():
             sql_trimmed = f"{sql_trimmed} LIMIT {max_scan_rows}"

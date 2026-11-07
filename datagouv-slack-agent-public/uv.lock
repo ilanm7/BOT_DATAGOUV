@@ -498,7 +498,7 @@ requires-dist = [
     { name = "beautifulsoup4", specifier = ">=4.15.0" },
     { name = "charset-normalizer", specifier = ">=3.3" },
     { name = "contextily", specifier = ">=1.7" },
-    { name = "duckdb", specifier = ">=1.1" },
+    { name = "duckdb", specifier = ">=1.2" },
     { name = "duckduckgo-search", specifier = ">=7.0" },
     { name = "html5lib", specifier = ">=1.1" },
     { name = "httpx", specifier = ">=0.27" },

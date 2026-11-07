@@ -89,3 +89,17 @@ class TestQueryFile:
                 query_file(path, "DROP TABLE scan")
         finally:
             path.unlink()
+
+    @pytest.mark.parametrize("sql", [
+        "SELECT content FROM read_text('{secret}')",
+        "SELECT size FROM read_blob('{secret}')",
+        "SELECT * FROM glob('{secret}')",
+        "SELECT * FROM '{secret}'",
+    ])
+    def test_query_cannot_read_other_files(self, sql, tmp_path):
+        data = tmp_path / "data.csv"
+        data.write_text("a\n1\n")
+        secret = tmp_path / "secret.csv"
+        secret.write_text("TOKEN\nxoxb\n")
+        with pytest.raises(AnalysisError, match="DuckDB erreur SQL"):  # refusé par DuckDB, pas par le filtre
+            query_file(data, sql.format(secret=secret))
