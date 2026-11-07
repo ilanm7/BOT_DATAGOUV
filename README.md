@@ -45,7 +45,7 @@ Slack app manifest: [`slack_manifest.json`](datagouv-slack-agent-public/slack_ma
 ## Tests
 
 ```bash
-pytest   # 41 tests, ~2s
+pytest   # 41 tests, ~20s
 ```
 
 Covers config validation, download pipeline, local analyzer, LLM client and bot logic (mocked with respx).

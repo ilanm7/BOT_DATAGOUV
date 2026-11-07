@@ -267,7 +267,7 @@ Slack (Socket Mode)
 pytest
 ```
 
-41 tests, ~2 secondes. Mocks réseau via `respx`.
+41 tests, ~20 secondes. Mocks réseau via `respx`.
 
 ---
 
